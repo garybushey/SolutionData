@@ -5,23 +5,24 @@
 
 This command will generate a CSV file containing all the MS Sentinel solution information
     .DESCRIPTION
-        This command will generate a CSV file containing all the MS Sentinel solution information
+        Based on the parameters used, this command will eitehr generate a CSV file containing the information about all the Microsoft Sentinel
+        MITRE tactics and techniques being used, or a listing of the rules that use the tactics and techniques
     .PARAMETER WorkspaceName
         Enter the Log Analytics workspace name, this is a required parameter
     .PARAMETER ResourceGroupName
         Enter the Log Analytics workspace name, this is a required parameter
     .PARAMETER FileName
-        Enter the file name to use.  Defaults to "solutionexport" and ".csv" will be appended to all FileNames that do not already include it
+        Enter the file name to use.  Defaults to "mitrerules" and ".csv" will be appended to all FileNames that do not already include it
    
     .NOTES
         AUTHOR= Gary Bushey
         LASTEDIT= 30 Sept 2022
     .EXAMPLE
-        Export-AzSentinelSolutionDataToCSV -WorkspaceName "WorkspaceName" -ResourceGroupName "rgname"
-        In this example you will get the file named "solutionexport.csv" generated containing all the solution information
+        Export-AzSentineMITREIncidentsToCSV -WorkspaceName "WorkspaceName" -ResourceGroupName "rgname"
+        In this example you will get the file named "mitrerules.csv" generated containing the count of the active rule's MITRE information
     .EXAMPLE
-        Export-AzSentinelSolutionDataToCSV -WorkspaceName "WorkspaceName" -ResourceGroupName "rgname" -FileName "test"
-        In this example you will get the file named "test.csv" generated containing  all the solution information
+        Export-AzSentineMITREIncidentsToCSV -WorkspaceName "WorkspaceName" -ResourceGroupName "rgname" -FileName "test"
+        In this example you will get the file named "test.csv" generated containing  the count of the active rule's MITRE information
 #>
 
 [CmdletBinding()]
@@ -44,6 +45,8 @@ $outputObject = New-Object system.Data.DataTable
 [void]$outputObject.Columns.Add('SolutionDescription', [string]::empty.GetType() )
 [void]$outputObject.Columns.Add('ResourceType', [string]::empty.GetType() )
 [void]$outputObject.Columns.Add('ResourceName', [string]::empty.GetType() )
+[void]$outputObject.Columns.Add('RequiredDataConnectors', [string]::empty.GetType() )
+[void]$outputObject.Columns.Add('RequiredDataTypes', [string]::empty.GetType() )
 
 
 Function Export-AzSentinelSolutionDataToCSV ($WorkspaceName, $ResourceGroupName, $FileName) {
@@ -78,6 +81,8 @@ Function Export-AzSentinelSolutionDataToCSV ($WorkspaceName, $ResourceGroupName,
     } #>
     $solutionUrl = "https://management.azure.com/subscriptions/$($SubscriptionId)/resourceGroups/$($ResourceGroupName)/providers/Microsoft.OperationalInsights/workspaces/$($WorkspaceName)/providers/Microsoft.SecurityInsights/contentProductPackages/" + $solution.name + "?api-version=2023-04-01-preview"
     $solutionData = (Invoke-RestMethod -Method "Get" -Uri $solutionUrl -Headers $authHeader )
+    $requiredDataConnectors = ""
+    $requiredDataTypes="";
     #Solution
     if ($solution.properties.contentKind -eq "Solution") {
       foreach ($resource in $solutionData.properties.packagedContent.resources) {
@@ -88,7 +93,13 @@ Function Export-AzSentinelSolutionDataToCSV ($WorkspaceName, $ResourceGroupName,
           $newRow.SolutionDescription = $solution.properties.descriptionHtml
           $newRow.ResourceType = $resource.properties.contentKind
           $newRow.ResourceName = $resource.properties.displayName
-    
+          if ($null -ne $resource.properties.mainTemplate.resources.properties.requiredDataConnectors.connectorId)
+          { 
+            $requiredDataConnectors = [String]::Join('|', $resource.properties.mainTemplate.resources.properties.requiredDataConnectors.connectorId) 
+            $requiredDataTypes = [String]::Join('|', $resource.properties.mainTemplate.resources.properties.requiredDataConnectors.dataTypes) 
+          }
+          $newRow.RequiredDataConnectors = $requiredDataConnectors
+          $newRow.RequiredDataTypes = $requiredDataConnectors
           [void]$outputObject.Rows.Add( $newRow )
         }
       }
@@ -103,7 +114,8 @@ Function Export-AzSentinelSolutionDataToCSV ($WorkspaceName, $ResourceGroupName,
       $newRow.SolutionDescription = $solution.properties.description
       $newRow.ResourceType = $resourceType
       $newRow.ResourceName = $resourceName
-
+      $newRow.RequiredDataConnectors = $requiredDataConnectors
+      $newRow.RequiredDataTypes = $requiredDataConnectors
       [void]$outputObject.Rows.Add( $newRow )
     }
   }

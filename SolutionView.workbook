@@ -22,6 +22,22 @@
             "linkLabel": "Search",
             "subTarget": "Search",
             "style": "link"
+          },
+          {
+            "id": "2e05ae4c-d717-4b49-89b6-5d5ec8a00069",
+            "cellValue": "tabView",
+            "linkTarget": "parameter",
+            "linkLabel": "Data Connectors",
+            "subTarget": "Data",
+            "style": "link"
+          },
+          {
+            "id": "a51aca5a-c1a4-4c86-baae-18c218268223",
+            "cellValue": "tabView",
+            "linkTarget": "parameter",
+            "linkLabel": "Data Types",
+            "subTarget": "Types",
+            "style": "link"
           }
         ]
       },
@@ -85,7 +101,6 @@
         "comparison": "isEqualTo",
         "value": "SolutionView"
       },
-      "customWidth": "40",
       "name": "mainQuery"
     },
     {
@@ -98,14 +113,13 @@
         "comparison": "isEqualTo",
         "value": "SolutionView"
       },
-      "customWidth": "59",
       "name": "Description"
     },
     {
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "_GetWatchlist('SolutionData')\r\n| where SolutionName == \"{SolutionName}\"\r\n| extend Resource_Type = iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"AnalyticsRule\",\"Analytics Rule\",iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"HuntingQuery\",\"Hunting Query\",iff(ResourceType==\"LogicAppsCustomConnector\",\"Logic Apps Custom Connector\",iff(ResourceType==\"AzureFunction\",\"Azure Function\",ResourceType))))))\r\n| project ResourceName, Resource_Type\r\n| order by Resource_Type asc, ResourceName asc",
+        "query": "_GetWatchlist('SolutionData')\r\n| where SolutionName == \"{SolutionName}\"\r\n| extend Resource_Type = iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"AnalyticsRule\",\"Analytics Rule\",iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"HuntingQuery\",\"Hunting Query\",iff(ResourceType==\"LogicAppsCustomConnector\",\"Logic Apps Custom Connector\",iff(ResourceType==\"AzureFunction\",\"Azure Function\",ResourceType))))))\r\n| project ResourceName, Resource_Type",
         "size": 0,
         "timeContext": {
           "durationMs": 86400000
@@ -130,35 +144,13 @@
         "comparison": "isEqualTo",
         "value": "SolutionView"
       },
-      "customWidth": "50",
-      "name": "Resources"
+      "name": "query - 3"
     },
     {
       "type": 3,
       "content": {
         "version": "KqlItem/1.0",
-        "query": "_GetWatchlist('SolutionData')\r\n| where SolutionName == \"{SolutionName}\"\r\n| extend Resource_Type = iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"AnalyticsRule\",\"Analytics Rule\",iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"HuntingQuery\",\"Hunting Query\",iff(ResourceType==\"LogicAppsCustomConnector\",\"Logic Apps Custom Connector\",iff(ResourceType==\"AzureFunction\",\"Azure Function\",ResourceType))))))\r\n| summarize count( Resource_Type) by Resource_Type",
-        "size": 0,
-        "timeContext": {
-          "durationMs": 86400000
-        },
-        "queryType": 0,
-        "resourceType": "microsoft.operationalinsights/workspaces",
-        "visualization": "piechart"
-      },
-      "conditionalVisibility": {
-        "parameterName": "tabView",
-        "comparison": "isEqualTo",
-        "value": "SolutionView"
-      },
-      "customWidth": "50",
-      "name": "query - 5"
-    },
-    {
-      "type": 3,
-      "content": {
-        "version": "KqlItem/1.0",
-        "query": "_GetWatchlist('SolutionData')\r\n| extend Resource_Type = iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"AnalyticsRule\",\"Analytics Rule\",iff(ResourceType==\"DataConnector\",\"Data Connector\",iff(ResourceType==\"HuntingQuery\",\"Hunting Query\",iff(ResourceType==\"LogicAppsCustomConnector\",\"Logic Apps Custom Connector\",iff(ResourceType==\"AzureFunction\",\"Azure Function\",ResourceType))))))\r\n| project SolutionName, SolutionType, ResourceName, Resource_Type\r\n| order by SolutionName asc",
+        "query": "_GetWatchlist('SolutionData')\r\n| project SolutionName, SolutionType, ResourceName, ResourceType\r\n| order by SolutionName asc",
         "size": 0,
         "timeContext": {
           "durationMs": 86400000
@@ -167,25 +159,7 @@
         "resourceType": "microsoft.operationalinsights/workspaces",
         "gridSettings": {
           "rowLimit": 4000,
-          "filter": true,
-          "labelSettings": [
-            {
-              "columnId": "SolutionName",
-              "label": "Solution Name"
-            },
-            {
-              "columnId": "SolutionType",
-              "label": "Solution Type"
-            },
-            {
-              "columnId": "ResourceName",
-              "label": "Resource Name"
-            },
-            {
-              "columnId": "Resource_Type",
-              "label": "Resource Type"
-            }
-          ]
+          "filter": true
         }
       },
       "conditionalVisibility": {
@@ -194,6 +168,126 @@
         "value": "Search"
       },
       "name": "query - 5"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "_GetWatchlist('SolutionData')\r\n| where ResourceType == \"AnalyticsRule\"\r\n| where isnotempty(RequiredDataConnectors)\r\n| mv-expand (split(RequiredDataConnectors,'|'))\r\n| distinct tostring(RequiredDataConnectors)",
+              "size": 0,
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "exportFieldName": "RequiredDataConnectors",
+              "exportParameterName": "RequiredDataConnectors",
+              "exportDefaultValue": " ",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "sortBy": [
+                  {
+                    "itemKey": "RequiredDataConnectors",
+                    "sortOrder": 1
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "RequiredDataConnectors",
+                  "sortOrder": 1
+                }
+              ]
+            },
+            "name": "query - 6"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "_GetWatchlist('SolutionData')\r\n| where ResourceType == \"AnalyticsRule\"\r\n| where isnotempty(RequiredDataConnectors)\r\n| mv-expand (split(RequiredDataConnectors,'|'))\r\n| where RequiredDataConnectors == \"{RequiredDataConnectors}\"\r\n| project SolutionName, ResourceName",
+              "size": 0,
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "query - 7"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tabView",
+        "comparison": "isEqualTo",
+        "value": "Data"
+      },
+      "name": "group - 8"
+    },
+    {
+      "type": 12,
+      "content": {
+        "version": "NotebookGroup/1.0",
+        "groupType": "editable",
+        "items": [
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "_GetWatchlist('SolutionData')\r\n| where ResourceType == \"AnalyticsRule\"\r\n| where isnotempty(RequiredDataTypes)\r\n| mv-expand (split(RequiredDataTypes,'|'))\r\n| distinct tostring(RequiredDataTypes)",
+              "size": 0,
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "exportFieldName": "RequiredDataTypes",
+              "exportParameterName": "RequiredDataTypes",
+              "exportDefaultValue": " ",
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces",
+              "gridSettings": {
+                "sortBy": [
+                  {
+                    "itemKey": "RequiredDataTypes",
+                    "sortOrder": 1
+                  }
+                ]
+              },
+              "sortBy": [
+                {
+                  "itemKey": "RequiredDataTypes",
+                  "sortOrder": 1
+                }
+              ]
+            },
+            "name": "query - 1"
+          },
+          {
+            "type": 3,
+            "content": {
+              "version": "KqlItem/1.0",
+              "query": "_GetWatchlist('SolutionData')\r\n| where ResourceType == \"AnalyticsRule\"\r\n| where isnotempty(RequiredDataTypes)\r\n| mv-expand (split(RequiredDataTypes,'|'))\r\n| where RequiredDataTypes == \"{RequiredDataTypes}\"\r\n| project SolutionName, ResourceName",
+              "size": 0,
+              "timeContext": {
+                "durationMs": 86400000
+              },
+              "queryType": 0,
+              "resourceType": "microsoft.operationalinsights/workspaces"
+            },
+            "name": "query - 2"
+          }
+        ]
+      },
+      "conditionalVisibility": {
+        "parameterName": "tabView",
+        "comparison": "isEqualTo",
+        "value": "Types"
+      },
+      "name": "group - 5"
     }
   ],
   "fallbackResourceIds": [
